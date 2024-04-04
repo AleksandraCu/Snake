@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class SnakeScript : MonoBehaviour
@@ -8,6 +6,8 @@ public class SnakeScript : MonoBehaviour
     private Vector2 snakeDirection = Vector2.right;
     private List<Transform> segments = new List<Transform>();
     public Transform segmentPrefab;
+    public MainMenuScript mainMenuScript;
+    public bool snakeIsAlive = true;
     public int initialSize = 5;
 
     private void Start()
@@ -17,73 +17,60 @@ public class SnakeScript : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
+        if (!snakeIsAlive)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             snakeDirection = Vector2.up;
-        }
-        else if (Input.GetKeyDown(KeyCode.S))
-        {
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
             snakeDirection = Vector2.down;
-        }
-        else if (Input.GetKeyDown(KeyCode.D))
-        {
+        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             snakeDirection = Vector2.right;
-        }
-        else if (Input.GetKeyDown(KeyCode.A)) 
-        {
+        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
             snakeDirection = Vector2.left;
-        }
     }
 
     private void FixedUpdate()
     {
-        for (int i = segments.Count - 1; i > 0; i--)
-        {
-            segments[i].position = segments[i - 1].position;
-        }
+        if (!snakeIsAlive)
+            return;
 
-        this.transform.position = new Vector3(
-            Mathf.Round(this.transform.position.x) + snakeDirection.x,
-            Mathf.Round(this.transform.position.y) + snakeDirection.y,
-            0.0f);
+        for (int i = segments.Count - 1; i > 0; i--)
+            segments[i].position = segments[i - 1].position;
+
+        transform.position += (Vector3)snakeDirection;
     }
 
     private void Grow()
     {
-        Transform segment = Instantiate(this.segmentPrefab);
+        Transform segment = Instantiate(segmentPrefab);
         segment.position = segments[segments.Count - 1].position;
-
-        segments.Add (segment);
+        segments.Add(segment);
     }
 
     private void ResetState()
     {
-        for (int i = 1; i < segments.Count; i++)
-        {
-            Destroy(segments[i].gameObject);
-        }
+        foreach (Transform segment in segments)
+            Destroy(segment.gameObject);
 
         segments.Clear();
-        segments.Add(this.transform);
+        segments.Add(transform);
 
-        for (int i = 1; i < this.initialSize; i++)
-        {
-            segments.Add(Instantiate(this.segmentPrefab));
-        }
+        for (int i = 1; i < initialSize; i++)
+            segments.Add(Instantiate(segmentPrefab));
 
-        this.transform.position = Vector3.zero;
+        transform.position = Vector3.zero;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Food")
-        {
+        if (collision.CompareTag("Food"))
             Grow();
-        }
-        else if (collision.tag == "Obstacle")
+        else if (collision.CompareTag("Obstacle"))
         {
-            ResetState();
+            mainMenuScript.GameOver();
+            snakeIsAlive = false;
+            snakeDirection = Vector2.zero;
         }
-        //else if TryAgainScreen() { }
     }
 }

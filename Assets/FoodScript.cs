@@ -11,7 +11,6 @@ public class FoodScript : MonoBehaviour
     public Text scoreText;
     public int highScore;
     public Text highScoreText;
-    public GameObject gameOverScreen;
 
     private void Start()
     {
